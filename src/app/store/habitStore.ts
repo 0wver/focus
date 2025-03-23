@@ -174,6 +174,15 @@ export const useHabitStore = create<HabitState>()(
     {
       name: 'ascend-habits-storage',
       version: 2, // Update version to clear previous storage
+      migrate: (persistedState: any, version: number) => {
+        // If we need migration logic for future changes, add it here
+        // For now, just return the state as is or a clean slate if migration fails
+        if (version === 0 || version === 1) {
+          // For older versions, return an empty state
+          return { habits: [] };
+        }
+        return persistedState as HabitState;
+      },
     }
   )
 );
