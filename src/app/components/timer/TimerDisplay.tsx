@@ -209,13 +209,7 @@ export default function TimerDisplay() {
             fill="none"
             stroke="currentColor"
             strokeWidth="4"
-            className={`${
-              currentSession.type === 'work'
-                ? 'text-primary-500 dark:text-primary-400'
-                : currentSession.type === 'long-break'
-                  ? 'text-purple-500 dark:text-purple-400'
-                  : 'text-secondary-500 dark:text-secondary-400'
-            }`}
+            className={`text-primary-500 dark:text-primary-400`}
             strokeDasharray="283"
             strokeDashoffset={283 - (283 * progress) / 100}
             strokeLinecap="round"
