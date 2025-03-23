@@ -18,6 +18,7 @@ import {
 import Navbar from '../components/layout/Navbar';
 import { useHabitStore } from '../store/habitStore';
 import { useTimerStore } from '../store/timerStore';
+import { Habit } from '@/app/models/Habit';
 
 // Register Chart.js components
 ChartJS.register(
@@ -257,10 +258,10 @@ export default function StatsPage() {
     : 0;
   
   // Utility to get days a habit has been active since creation
-  const getDaysActiveForHabit = (habit) => {
+  const getDaysActiveForHabit = (habit: Habit) => {
     const creationDate = new Date(habit.createdAt);
     const today = new Date();
-    const diffTime = Math.abs(today - creationDate);
+    const diffTime = Math.abs(today.getTime() - creationDate.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
     return diffDays || 1; // Minimum 1 day
   };
@@ -470,7 +471,7 @@ export default function StatsPage() {
     datasets: [
       {
         label: 'Hours Studied',
-        data: topSubjects.map(([_, hours]) => parseFloat(hours.toFixed(1))),
+        data: topSubjects.map(([subject, hours]) => parseFloat(hours.toFixed(1))),
         backgroundColor: [
           'rgba(99, 102, 241, 0.7)',
           'rgba(245, 158, 11, 0.7)',

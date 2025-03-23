@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FiX, FiPlus, FiCalendar, FiClock, FiTag, FiInfo, FiBook, FiHeart, FiCoffee, FiZap, FiEdit3 } from 'react-icons/fi';
 import { useHabitStore } from '@/app/store/habitStore';
-import { DAYS_OF_WEEK } from '@/app/models/Habit';
+import { DAYS_OF_WEEK, Habit } from '@/app/models/Habit';
 
 interface AddHabitModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ export default function AddHabitModal({ isOpen, onClose, selectedDate }: AddHabi
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('study');
+  const [category, setCategory] = useState<'study' | 'health' | 'personal' | 'work' | 'creative'>('study');
   const [icon, setIcon] = useState('star');
   const [frequencyType, setFrequencyType] = useState<'daily' | 'weekly' | 'custom'>('daily');
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // Monday to Friday by default
@@ -164,10 +164,10 @@ export default function AddHabitModal({ isOpen, onClose, selectedDate }: AddHabi
     e.preventDefault();
     
     // Validate frequency data to prevent errors
-    let frequencyData = {};
+    let frequencyData: Habit['frequency'];
     if (frequencyType === 'weekly') {
       frequencyData = {
-        type: frequencyType,
+        type: 'weekly',
         days: selectedDays,
         repetitions: repetitions,
       };
@@ -311,7 +311,7 @@ export default function AddHabitModal({ isOpen, onClose, selectedDate }: AddHabi
                       <button
                         key={option.id}
                         type="button"
-                        onClick={() => setCategory(option.id)}
+                        onClick={() => setCategory(option.id as 'study' | 'health' | 'personal' | 'work' | 'creative')}
                         className={`flex flex-col items-center justify-center p-3 rounded-lg border-2 transition-all duration-200 ${
                           category === option.id
                             ? `${getCategoryClasses(option.id).selectedBg} text-white border-transparent shadow-[0_0_10px_rgba(249,115,22,0.3)]`

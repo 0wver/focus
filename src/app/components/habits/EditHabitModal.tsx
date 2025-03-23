@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { FiX, FiCalendar, FiClock, FiTag, FiInfo, FiBook, FiHeart, FiCoffee, FiZap, FiEdit3 } from 'react-icons/fi';
+import { FiX, FiClock, FiTag, FiInfo, FiBook, FiHeart, FiCoffee, FiZap, FiEdit3 } from 'react-icons/fi';
 import { useHabitStore } from '@/app/store/habitStore';
 import { DAYS_OF_WEEK, Habit } from '@/app/models/Habit';
 
@@ -25,7 +25,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
   // Form state
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('study');
+  const [category, setCategory] = useState<'study' | 'health' | 'personal' | 'work' | 'creative'>('study');
   const [icon, setIcon] = useState('star');
   const [frequencyType, setFrequencyType] = useState<'daily' | 'weekly' | 'custom'>('daily');
   const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // Monday to Friday by default
@@ -203,7 +203,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
       icon,
       category,
       tags,
-      frequency: frequencyData as any,
+      frequency: frequencyData as Habit['frequency'],
       schedule: {
         times: reminders,
         sound: 'bell',
@@ -334,7 +334,7 @@ export default function EditHabitModal({ isOpen, onClose, habit }: EditHabitModa
                       <button
                         key={opt.id}
                         type="button"
-                        onClick={() => setCategory(opt.id)}
+                        onClick={() => setCategory(opt.id as 'study' | 'health' | 'personal' | 'work' | 'creative')}
                         className={`flex items-center justify-center px-3 py-2.5 rounded-lg border border-white/20 transition-all duration-200 ${
                           category === opt.id
                             ? `bg-${opt.color}-primary/30 border-${opt.color}-primary/50`

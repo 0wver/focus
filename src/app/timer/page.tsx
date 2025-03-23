@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiClock, FiSettings, FiPlus, FiChevronDown, FiChevronUp, FiPlay, FiTrash } from 'react-icons/fi';
+import { FiClock, FiSettings, FiPlus, FiChevronDown, FiChevronUp, FiTrash } from 'react-icons/fi';
 import Navbar from '../components/layout/Navbar';
 import TimerDisplay from '../components/timer/TimerDisplay';
 import { useTimerStore } from '../store/timerStore';
@@ -11,11 +11,10 @@ import { TimerSettings } from '../models/Timer';
 
 export default function TimerPage() {
   const [isClient, setIsClient] = useState(false);
+  const [activeTimerTab, setActiveTimerTab] = useState(0);
   const [selectedTimerId, setSelectedTimerId] = useState<string | null>(null);
   const [isTrackingExpanded, setIsTrackingExpanded] = useState(false);
   const [selectedHabitId, setSelectedHabitId] = useState<string | null>(null);
-  const [isEditingTimer, setIsEditingTimer] = useState(false);
-  const [currentEditingTimer, setCurrentEditingTimer] = useState<string | null>(null);
   
   // Prevent hydration issues
   useEffect(() => {
@@ -25,16 +24,17 @@ export default function TimerPage() {
   // Only access stores after client-side rendering
   const { 
     timerSettings, 
+    timerState,
     activeTimerId, 
     activeHabitId,
+    studySessions,
+    currentSession,
+    getActiveHabitProgress,
+    createTimer, 
     startTimer, 
-    addStudySession, 
+    setActiveHabit, 
     resetTimer, 
-    updateTimerSettings, 
-    addTimerSettings, 
-    deleteTimerSettings,
-    setActiveHabit,
-    getActiveHabitProgress
+    deleteTimer
   } = useTimerStore();
   
   const { habits } = useHabitStore();
@@ -75,12 +75,6 @@ export default function TimerPage() {
     setSelectedTimerId(timerId);
   };
   
-  const handleStartTimer = () => {
-    if (selectedTimerId) {
-      startTimer(selectedTimerId);
-    }
-  };
-  
   const handleSelectHabit = (habitId: string) => {
     setSelectedHabitId(habitId);
     setActiveHabit(habitId);
@@ -90,7 +84,7 @@ export default function TimerPage() {
     if (!selectedHabitId) return; // Require habit selection instead of subject
     
     // Create and start study session
-    const studySessionId = addStudySession({
+    const studySessionId = createTimer({
       subject: habits.find(h => h.id === selectedHabitId)?.name || 'Study Session', // Use habit name as subject
       tags: [],
       habitId: selectedHabitId,
@@ -124,7 +118,7 @@ export default function TimerPage() {
     };
     
     // Add the new preset
-    addTimerSettings(newTimerSettings);
+    createTimer(newTimerSettings);
   };
   
   const handleTimerSettings = (timerId: string) => {
@@ -377,7 +371,7 @@ export default function TimerPage() {
                             </button>
                           </div>
                           <p className="mt-1 text-xs text-white/80">
-                            Hours spent will be deducted from habit's duration goal
+                            Hours spent will be deducted from habit&apos;s duration goal
                           </p>
                         </div>
                       )}

@@ -172,7 +172,6 @@ export default function HabitCalendar({ isOpen, onClose, onSelectDate }: HabitCa
               const isSelected = isSameDay(day, selectedDate);
               const hasCompletions = hasCompletionsOnDate(day);
               const hasHabits = hasHabitsOnDate(day);
-              const completionCount = countCompletionsOnDate(day);
               
               return (
                 <button

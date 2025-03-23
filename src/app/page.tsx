@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format, subDays } from 'date-fns';
-import { FiPlus, FiClock, FiBarChart2, FiChevronRight, FiStar, FiCalendar, FiSettings, FiX, FiZap } from 'react-icons/fi';
-import Link from 'next/link';
+import { FiPlus, FiClock, FiBarChart2, FiCalendar, FiZap } from 'react-icons/fi';
 import Navbar from './components/layout/Navbar';
 import HabitCard from './components/habits/HabitCard';
 import AddHabitModal from './components/habits/AddHabitModal';
@@ -279,7 +278,6 @@ export default function Dashboard() {
   
   // Get streaks for the streak leader feature
   const habitsByStreak = [...habits].sort((a, b) => b.streak.current - a.streak.current);
-  const longestStreak = habitsByStreak.length > 0 ? habitsByStreak[0] : null;
   
   // Handle habit edit
   const handleEditHabit = (habit: Habit) => {
@@ -306,6 +304,11 @@ export default function Dashboard() {
           <h1 className="text-3xl font-display font-bold text-white mb-2">{selectedDateFormatted}</h1>
           <h2 className="text-2xl font-display font-bold text-white">Welcome back! Keep up the good work.</h2>
         </div>
+        
+        {/* Progress Overview */}
+        <p className="text-sm text-white/60 mb-2">
+          Let&apos;s build better habits, one day at a time.
+        </p>
         
         {/* Cards Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -390,7 +393,6 @@ export default function Dashboard() {
                 >
                   <HabitCard 
                     habit={habit} 
-                    onClick={handleEditHabit} 
                     onEdit={handleEditHabit} 
                   />
                 </div>
@@ -401,8 +403,8 @@ export default function Dashboard() {
                   <FiCalendar className="w-7 h-7" />
                 </div>
                 <h3 className="text-xl font-medium text-white mb-2">No Habits Scheduled</h3>
-                <p className="text-white/70 mb-5 max-w-md mx-auto">
-                  You don't have any habits scheduled for {selectedDateFormatted}.
+                <p className="text-base text-white/80 mb-6">
+                  You haven&apos;t added any habits yet. Start by adding your first habit!
                 </p>
                 <button 
                   className="px-4 py-2.5 bg-gradient-to-br from-primary-600 to-primary-700 text-white rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.3)] hover:shadow-[0_0_20px_rgba(249,115,22,0.5)] hover:-translate-y-1 active:translate-y-0 transition-all duration-300"

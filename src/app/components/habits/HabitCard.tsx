@@ -3,13 +3,11 @@
 import { useState, useEffect } from 'react';
 import { Habit } from '@/app/models/Habit';
 import { useHabitStore } from '@/app/store/habitStore';
-import { useTimerStore } from '@/app/store/timerStore';
 import { format } from 'date-fns';
-import { FiCheck, FiChevronRight, FiFlag, FiBook, FiHeart, FiCoffee, FiZap, FiClock, FiStar, FiEdit3, FiTrash2, FiEdit, FiMoreVertical, FiX } from 'react-icons/fi';
+import { FiCheck, FiFlag, FiBook, FiHeart, FiCoffee, FiZap, FiClock, FiStar, FiX, FiEdit3 } from 'react-icons/fi';
 
 interface HabitCardProps {
   habit: Habit;
-  onClick: () => void;
   onEdit?: (habit: Habit) => void;
 }
 
@@ -28,12 +26,10 @@ const getCategoryIcon = (category: string) => {
   }
 };
 
-export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
+export default function HabitCard({ habit, onEdit }: HabitCardProps) {
   const [isClient, setIsClient] = useState(false);
   const { completeHabit, deleteHabit, undoHabitCompletion } = useHabitStore();
-  const { getActiveHabitProgress } = useTimerStore();
   const [isCompleting, setIsCompleting] = useState(false);
-  const [showActionMenu, setShowActionMenu] = useState(false);
   const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
   
   // Set client-side rendering flag
@@ -46,7 +42,7 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
   
   // Initialize completion status
   let completedToday = isClient && habit.completions.some(c => c.date.split('T')[0] === today);
-  let completionCount = isClient ? habit.completions.filter(c => c.date.split('T')[0] === today).reduce((sum, c) => sum + c.count, 0) : 0;
+  const completionCount = isClient ? habit.completions.filter(c => c.date.split('T')[0] === today).reduce((sum, c) => sum + c.count, 0) : 0;
   
   // Get target repetitions
   const repetitionTarget = habit.frequency.repetitions || 1;
@@ -223,7 +219,6 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
     if (confirm('Are you sure you want to delete this habit?')) {
       deleteHabit(habit.id);
     }
-    setShowActionMenu(false);
   };
 
   const handleEdit = (e: React.MouseEvent) => {
@@ -231,7 +226,6 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
     if (onEdit) {
       onEdit(habit);
     }
-    setShowActionMenu(false);
   };
   
   // Get frequency text in a readable format
@@ -339,24 +333,4 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
       </div>
     </div>
   );
-}
-
-// Helper function to convert category to icon
-function categoryToIcon(category: string) {
-  switch (category) {
-    case 'study':
-      return <FiBook className="w-6 h-6" />;
-    case 'health':
-      return <FiHeart className="w-6 h-6" />;
-    case 'personal':
-      return <FiCoffee className="w-6 h-6" />;
-    case 'work':
-      return <FiZap className="w-6 h-6" />;
-    case 'creative':
-      return <FiEdit3 className="w-6 h-6" />;
-    default:
-      return <FiStar className="w-6 h-6" />;
-  }
-}
-
-// ... existing code ... 
+} 

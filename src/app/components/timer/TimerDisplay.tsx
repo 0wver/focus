@@ -33,7 +33,6 @@ export default function TimerDisplay() {
   
   const { habits } = useHabitStore();
   const activeHabit = isClient ? habits.find(h => h.id === activeHabitId) : null;
-  const habitProgress = isClient && activeHabit ? getActiveHabitProgress() : null;
 
   // Local state for timer animation
   const [timerKey, setTimerKey] = useState(0);
