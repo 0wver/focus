@@ -227,7 +227,7 @@ export default function SettingsPage() {
               </div>
               
               <a
-                href="https://github.com/yourusername/ascend-study-focus"
+                href="https://github.com/0wver"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-400 hover:underline"
