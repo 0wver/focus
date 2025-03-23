@@ -75,13 +75,27 @@ export const useHabitStore = create<HabitState>()(
           
           let updatedCompletions;
           if (existingCompletionIndex >= 0) {
-            // Update existing completion
-            updatedCompletions = [...habit.completions];
-            updatedCompletions[existingCompletionIndex] = {
-              ...updatedCompletions[existingCompletionIndex],
-              count: completion.count,
-              notes: completion.notes,
-            };
+            // For habits with duration, we should accumulate hours rather than replace
+            if (habit.duration) {
+              // Update existing completion by adding to the count (accumulate hours)
+              const existingCompletion = habit.completions[existingCompletionIndex];
+              const updatedCount = (existingCompletion.count || 0) + (completion.count || 1);
+              
+              updatedCompletions = [...habit.completions];
+              updatedCompletions[existingCompletionIndex] = {
+                ...existingCompletion,
+                count: updatedCount,
+                notes: completion.notes || existingCompletion.notes,
+              };
+            } else {
+              // For regular habits, just update the existing completion
+              updatedCompletions = [...habit.completions];
+              updatedCompletions[existingCompletionIndex] = {
+                ...updatedCompletions[existingCompletionIndex],
+                count: completion.count || 1,
+                notes: completion.notes,
+              };
+            }
           } else {
             // Add new completion
             updatedCompletions = [

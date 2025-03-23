@@ -47,8 +47,8 @@ export default function Navbar() {
                   aria-label={item.name}
                   className={`relative w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 ${
                     isActive 
-                      ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]' 
-                      : 'text-white/90 hover:bg-black/30 hover:text-white'
+                      ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-110 after:absolute after:inset-0 after:rounded-full after:bg-gradient-to-r after:from-primary-500 after:to-primary-400 after:opacity-20 after:-z-10 after:blur-md' 
+                      : 'text-white/90 hover:bg-black/30 hover:text-white hover:scale-105'
                   }`}
                 >
                   {item.icon}
@@ -66,8 +66,8 @@ export default function Navbar() {
               onClick={toggleTheme}
               className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
                 theme === 'dark' 
-                  ? 'bg-black/20 text-primary-400 hover:bg-primary-500/20' 
-                  : 'bg-white/10 text-primary-400 hover:bg-primary-500/20'
+                  ? 'bg-black/20 text-primary-400 hover:bg-primary-500/20 hover:scale-105' 
+                  : 'bg-white/10 text-primary-400 hover:bg-primary-500/20 hover:scale-105'
               }`}
               aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             >
@@ -81,10 +81,10 @@ export default function Navbar() {
             <Link
               href="/settings"
               aria-label="Settings"
-              className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+              className={`w-10 h-10 rounded-full flex items-center justify-center relative transition-all duration-300 ${
                 pathname === '/settings' 
-                  ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]' 
-                  : 'bg-black/20 text-white/90 hover:bg-primary-500/20'
+                  ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-110 after:absolute after:inset-0 after:rounded-full after:bg-gradient-to-r after:from-primary-500 after:to-primary-400 after:opacity-20 after:-z-10 after:blur-md' 
+                  : 'bg-black/20 text-white/90 hover:bg-primary-500/20 hover:scale-105'
               }`}
             >
               <FiSettings className="w-5 h-5" />
@@ -96,7 +96,11 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <button
               onClick={toggleMobileMenu}
-              className="md:hidden w-10 h-10 rounded-full flex items-center justify-center bg-black/20 text-white/90 hover:bg-primary-500/20 transition-all duration-300"
+              className={`md:hidden w-10 h-10 rounded-full flex items-center justify-center relative transition-all duration-300 ${
+                isMobileMenuOpen
+                  ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-110 after:absolute after:inset-0 after:rounded-full after:bg-gradient-to-r after:from-primary-500 after:to-primary-400 after:opacity-20 after:-z-10 after:blur-md'
+                  : 'bg-black/20 text-white/90 hover:bg-primary-500/20 hover:scale-105'
+              }`}
               aria-label="Toggle mobile menu"
             >
               {isMobileMenuOpen ? (
@@ -122,10 +126,10 @@ export default function Navbar() {
                     key={item.path}
                     href={item.path}
                     aria-label={item.name}
-                    className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-300 ${
+                    className={`w-12 h-12 flex items-center justify-center rounded-full relative transition-all duration-300 ${
                       isActive 
-                        ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)]' 
-                        : 'bg-black/30 text-white/90 hover:text-white hover:bg-primary-500/20'
+                        ? 'bg-primary-500/30 text-white shadow-[0_0_15px_rgba(249,115,22,0.5)] scale-110 after:absolute after:inset-0 after:rounded-full after:bg-gradient-to-r after:from-primary-500 after:to-primary-400 after:opacity-20 after:-z-10 after:blur-md' 
+                        : 'bg-black/30 text-white/90 hover:text-white hover:bg-primary-500/20 hover:scale-105'
                     }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                   >

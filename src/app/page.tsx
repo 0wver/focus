@@ -132,18 +132,78 @@ export default function Dashboard() {
       return total + (session.duration / 3600); // Convert seconds to hours
     }, 0);
   
-  // Total hours studied today
-  const totalHoursStudiedToday = totalStudyHours;
+  // Calculate hours from habit completions
+  const habitStudyHours = habits
+    .filter(habit => (habit.category === 'study' || habit.category === 'work') && habit.duration)
+    .reduce((total, habit) => {
+      // Sum up hours from today's completions
+      const todayHours = habit.completions
+        .filter(completion => completion.date.startsWith(today))
+        .reduce((sum, completion) => {
+          let hoursForCompletion = 0;
+          
+          if (completion.notes && completion.notes.includes('hours of study with timer')) {
+            // This is a timer-tracked completion - extract hours from the notes
+            const hoursMatch = completion.notes.match(/Completed (\d+(\.\d+)?) hours/);
+            if (hoursMatch && hoursMatch[1]) {
+              hoursForCompletion = parseFloat(hoursMatch[1]);
+            } else {
+              // Fallback to the count if we can't parse the notes
+              hoursForCompletion = completion.count || 0;
+            }
+          } else {
+            // This is a manually tracked completion
+            hoursForCompletion = completion.count || 0;
+          }
+          
+          return sum + hoursForCompletion;
+        }, 0);
+      
+      return total + todayHours;
+    }, 0);
+  
+  // Total hours studied today (from study sessions and habit completions)
+  const totalHoursStudiedToday = totalStudyHours + habitStudyHours;
   
   // Calculate average daily study hours (over the last 7 days)
   const last7Days = Array.from({ length: 7 }, (_, i) => format(subDays(new Date(), i), 'yyyy-MM-dd'));
   
   const dailyStudyHours = last7Days.map(dayStr => {
-    return studySessions
+    // Hours from sessions
+    const sessionHours = studySessions
       .filter(session => session.startTime.startsWith(dayStr))
       .reduce((total, session) => {
         return total + (session.duration / 3600);
       }, 0);
+      
+    // Hours from habit completions
+    const habitHours = habits
+      .filter(habit => (habit.category === 'study' || habit.category === 'work') && habit.duration)
+      .reduce((total, habit) => {
+        return total + habit.completions
+          .filter(completion => completion.date.startsWith(dayStr))
+          .reduce((sum, completion) => {
+            let hoursForCompletion = 0;
+            
+            if (completion.notes && completion.notes.includes('hours of study with timer')) {
+              // This is a timer-tracked completion - extract hours from the notes
+              const hoursMatch = completion.notes.match(/Completed (\d+(\.\d+)?) hours/);
+              if (hoursMatch && hoursMatch[1]) {
+                hoursForCompletion = parseFloat(hoursMatch[1]);
+              } else {
+                // Fallback to the count if we can't parse the notes
+                hoursForCompletion = completion.count || 0;
+              }
+            } else {
+              // This is a manually tracked completion
+              hoursForCompletion = completion.count || 0;
+            }
+            
+            return sum + hoursForCompletion;
+          }, 0);
+      }, 0);
+    
+    return sessionHours + habitHours;
   });
   
   const averageDailyStudyHours = dailyStudyHours.reduce((sum, hours) => sum + hours, 0) / 7;
@@ -154,6 +214,35 @@ export default function Dashboard() {
     .reduce((total, session) => {
       return total + (session.duration / 3600);
     }, 0);
+    
+  // Add work hours from habit completions
+  const workHoursFromHabits = habits
+    .filter(habit => habit.category === 'work' && habit.duration)
+    .reduce((total, habit) => {
+      return total + habit.completions
+        .filter(completion => completion.date.startsWith(today))
+        .reduce((sum, completion) => {
+          let hoursForCompletion = 0;
+          
+          if (completion.notes && completion.notes.includes('hours of work with timer')) {
+            // This is a timer-tracked completion - extract hours from the notes
+            const hoursMatch = completion.notes.match(/Completed (\d+(\.\d+)?) hours/);
+            if (hoursMatch && hoursMatch[1]) {
+              hoursForCompletion = parseFloat(hoursMatch[1]);
+            } else {
+              // Fallback to the count if we can't parse the notes
+              hoursForCompletion = completion.count || 0;
+            }
+          } else {
+            // This is a manually tracked completion
+            hoursForCompletion = completion.count || 0;
+          }
+          
+          return sum + hoursForCompletion;
+        }, 0);
+    }, 0);
+  
+  const totalWorkHoursToday = totalWorkHours + workHoursFromHabits;
   
   // Create an array of stat cards to cycle through
   const statCards = [
@@ -175,7 +264,7 @@ export default function Dashboard() {
     },
     {
       title: "Work Hours Today",
-      value: totalWorkHours.toFixed(1),
+      value: totalWorkHoursToday.toFixed(1),
       unit: "hrs",
       icon: <FiZap className="w-6 h-6" />,
       description: "",

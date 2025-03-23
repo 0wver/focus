@@ -107,7 +107,7 @@ export default function StatsPage() {
     
     return {
       date: format(day, 'EEE'),
-      hours: sessionsHours
+      hours: sessionsHours + habitsHours
     };
   });
   
@@ -141,7 +141,7 @@ export default function StatsPage() {
     
     return {
       date: format(day, 'EEE'),
-      hours: workSessionsHours
+      hours: workSessionsHours + workHabitsHours
     };
   });
   
@@ -184,7 +184,7 @@ export default function StatsPage() {
     }, 0);
   
   // Calculate total hours studied (from both habits and sessions)
-  const totalHoursStudied = totalSessionsHours;
+  const totalHoursStudied = totalSessionsHours + totalHabitsHours;
   
   // Calculate total work hours from habits
   const totalWorkHoursFromHabits = habits
@@ -211,7 +211,7 @@ export default function StatsPage() {
     }, 0);
   
   // Calculate total work hours
-  const totalWorkHours = totalWorkHoursFromSessions;
+  const totalWorkHours = totalWorkHoursFromSessions + totalWorkHoursFromHabits;
   
   // Calculate average work hours per day
   const workDaysSinceStart = habits.filter(h => h.category === 'work').length > 0
@@ -272,8 +272,29 @@ export default function StatsPage() {
     
     // Only count time for study and work categories
     if (habit.category === 'study' || habit.category === 'work') {
-      // We're now only counting time from sessions, not from habit completions
-      totalHoursSpent = 0;
+      // Calculate hours from habit completions
+      totalHoursSpent = habit.completions.reduce((total, completion) => {
+        let hoursForCompletion = 0;
+        
+        if (completion.notes && completion.notes.includes('hours of study with timer')) {
+          // This is a timer-tracked completion - extract hours from the notes
+          const hoursMatch = completion.notes.match(/Completed (\d+(\.\d+)?) hours/);
+          if (hoursMatch && hoursMatch[1]) {
+            hoursForCompletion = parseFloat(hoursMatch[1]);
+          } else {
+            // Fallback to the count if we can't parse the notes
+            hoursForCompletion = completion.count || 0;
+          }
+        } else if (completion.notes && completion.notes.includes('Manually')) {
+          // This is a manually tracked completion
+          hoursForCompletion = completion.count || 0;
+        } else {
+          // Regular completion, use count
+          hoursForCompletion = completion.count || 0;
+        }
+        
+        return total + hoursForCompletion;
+      }, 0);
     }
     
     // Calculate completion rate
@@ -299,6 +320,27 @@ export default function StatsPage() {
       
       if (dayData) {
         dayData.completed = true;
+        
+        // Add hours data for study/work habits with duration
+        if (habit.category === 'study' || habit.category === 'work') {
+          let hoursForCompletion = 0;
+          
+          if (completion.notes && completion.notes.includes('hours of study with timer')) {
+            // This is a timer-tracked completion - extract hours from the notes
+            const hoursMatch = completion.notes.match(/Completed (\d+(\.\d+)?) hours/);
+            if (hoursMatch && hoursMatch[1]) {
+              hoursForCompletion = parseFloat(hoursMatch[1]);
+            } else {
+              // Fallback to the count if we can't parse the notes
+              hoursForCompletion = completion.count || 0;
+            }
+          } else {
+            // This is a manually tracked completion
+            hoursForCompletion = completion.count || 0;
+          }
+          
+          dayData.hours += hoursForCompletion;
+        }
       }
     });
     
@@ -954,10 +996,14 @@ export default function StatsPage() {
                   </div>
                   
                   <div className="bg-black/20 rounded-lg p-4">
-                    <h4 className="text-md font-medium text-white mb-3">Work Sessions Data</h4>
+                    <h4 className="text-md font-medium text-white mb-3">Work Hours Breakdown</h4>
                     <div>
                       <p className="text-sm text-white/70 mb-1">From Work Sessions:</p>
                       <p className="text-lg font-medium text-white">{totalWorkHoursFromSessions.toFixed(1)} hours</p>
+                    </div>
+                    <div className="mt-2">
+                      <p className="text-sm text-white/70 mb-1">From Work Habits:</p>
+                      <p className="text-lg font-medium text-white">{totalWorkHoursFromHabits.toFixed(1)} hours</p>
                     </div>
                   </div>
                 </div>

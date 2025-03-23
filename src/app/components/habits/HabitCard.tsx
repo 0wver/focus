@@ -34,6 +34,7 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
   const { getActiveHabitProgress } = useTimerStore();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
   
   // Set client-side rendering flag
   useEffect(() => {
@@ -97,6 +98,14 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
       completedToday = studyProgress.isCompleted;
     }
   }
+  
+  // Add effect to refresh study progress when lastUpdateTime changes
+  useEffect(() => {
+    if (isClient && (habit.category === 'study' || habit.category === 'work') && habit.duration) {
+      // This will re-render the component when lastUpdateTime changes
+      // The studyProgress calculation will run again with fresh data
+    }
+  }, [isClient, habit, lastUpdateTime]);
   
   // Get the correct category color
   const getCategoryColor = () => {
@@ -163,21 +172,55 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
   const handleComplete = (e: React.MouseEvent) => {
     e.stopPropagation();
     
+    // Set completing state to prevent double-clicks
+    setIsCompleting(true);
+    
     // For habits with duration, clicking the complete button manually completes the habit
     if (habit.duration) {
       if (completedToday) {
         // If already completed, undo all completions for today
         undoHabitCompletion(habit.id, today);
+        // Trigger UI refresh
+        setTimeout(() => {
+          setLastUpdateTime(Date.now());
+          setIsCompleting(false);
+        }, 300);
       } else {
-        // If not completed, add a completion that reaches 100%
-        const remainingHours = studyProgress ? habit.duration - studyProgress.hoursSpent : habit.duration;
+        // Get current progress if any
+        const currentHoursSpent = studyProgress ? studyProgress.hoursSpent : 0;
+        const hoursToComplete = habit.duration;
         
-        completeHabit({
-          habitId: habit.id,
-          date: today + 'T' + new Date().toISOString().split('T')[1],
-          count: remainingHours > 0 ? remainingHours : habit.duration,
-          notes: `Manually completed ${habit.duration} hours target`
-        });
+        // We now have two options:
+        // 1. Complete partially (add 1 hour)
+        // 2. Complete fully (add remaining hours to reach 100%)
+        
+        // Check if we're close to completion (more than 80% done)
+        const isNearlyComplete = currentHoursSpent >= (hoursToComplete * 0.8);
+        
+        // If nearly complete, just complete it fully
+        if (isNearlyComplete) {
+          const remainingHours = hoursToComplete - currentHoursSpent;
+          completeHabit({
+            habitId: habit.id,
+            date: today + 'T' + new Date().toISOString().split('T')[1],
+            count: Math.max(0.1, remainingHours), // Always add at least 0.1 hours
+            notes: `Manually completed ${Math.round(remainingHours * 10) / 10} hours`
+          });
+        } else {
+          // Otherwise, add 1 hour of progress (partial completion)
+          completeHabit({
+            habitId: habit.id,
+            date: today + 'T' + new Date().toISOString().split('T')[1],
+            count: 1,
+            notes: `Manually added 1 hour`
+          });
+        }
+        
+        // Trigger UI refresh
+        setTimeout(() => {
+          setLastUpdateTime(Date.now());
+          setIsCompleting(false);
+        }, 300);
       }
     } else {
       // For regular habits without duration, toggle completion as before
@@ -190,6 +233,12 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
           count: 1
         });
       }
+      
+      // Trigger UI refresh
+      setTimeout(() => {
+        setLastUpdateTime(Date.now());
+        setIsCompleting(false);
+      }, 300);
     }
   };
 
@@ -297,8 +346,8 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
               completedToday
                 ? `${categoryColor.iconBg} text-white ${categoryColor.iconShadow}`
                 : 'bg-white/10 text-white/70 hover:bg-white/20'
-            }`}
-            aria-label={completedToday ? 'Mark as incomplete' : 'Mark as complete'}
+            } ${isCompleting ? 'pointer-events-none opacity-70' : ''}`}
+            disabled={isCompleting}
           >
             <FiCheck className={`w-5 h-5 ${completedToday ? 'text-white' : 'text-white/70'}`} />
           </button>
