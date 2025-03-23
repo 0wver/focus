@@ -435,6 +435,57 @@ export const useTimerStore = create<TimerState>()(
     }),
     {
       name: 'ascend-timer-storage',
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        // Handle migration of timer state from older versions
+        if (version === 0) {
+          // Return a fresh state if migrating from version 0
+          return {
+            timerSettings: [
+              {
+                id: 'default-pomodoro',
+                name: 'Standard Pomodoro',
+                icon: 'clock',
+                type: 'pomodoro',
+                workDuration: 25 * 60,
+                breakDuration: 5 * 60,
+                longBreakDuration: 15 * 60,
+                longBreakInterval: 4,
+                autoStartNextSession: true,
+                sound: 'chime',
+                vibration: true,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+              {
+                id: 'long-focus',
+                name: 'Long Focus Session',
+                icon: 'brain',
+                type: 'custom',
+                workDuration: 50 * 60,
+                breakDuration: 10 * 60,
+                autoStartNextSession: false,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+              },
+            ],
+            activeTimerId: null,
+            activeHabitId: null,
+            timerSessions: [],
+            studySessions: [],
+            timerState: 'idle',
+            currentSession: {
+              type: 'work',
+              startTime: null,
+              timeLeft: 0,
+              elapsedTime: 0,
+              totalDuration: 0,
+              sessionsCompleted: 0,
+            }
+          };
+        }
+        return persistedState as TimerState;
+      },
     }
   )
 ); 

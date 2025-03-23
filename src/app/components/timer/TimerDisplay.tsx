@@ -99,6 +99,10 @@ export default function TimerDisplay() {
           }
         }
       }, 1000);
+    } else if (intervalRef.current) {
+      // Clear interval when timer is not running
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
     }
     
     // Cleanup listeners and intervals
@@ -114,8 +118,11 @@ export default function TimerDisplay() {
   // Reset animation key when timer changes
   useEffect(() => {
     if (!isClient) return;
-    setTimerKey(prev => prev + 1);
-  }, [currentSession.type, currentSession.timeLeft, isClient]);
+    // Only update timerKey when needed to prevent unnecessary animations
+    if (currentSession.timeLeft === currentSession.totalDuration || currentSession.timeLeft === 0) {
+      setTimerKey(prev => prev + 1);
+    }
+  }, [currentSession.type, currentSession.timeLeft, currentSession.totalDuration, isClient]);
 
   // Update display when active timer changes
   useEffect(() => {
@@ -171,9 +178,9 @@ export default function TimerDisplay() {
     }
   }
 
-  // Calculate progress percentage
+  // Calculate progress percentage with safer checks
   const progress = isClient && currentSession.totalDuration > 0
-    ? ((currentSession.totalDuration - currentSession.timeLeft) / currentSession.totalDuration) * 100
+    ? Math.min(100, Math.max(0, ((currentSession.totalDuration - currentSession.timeLeft) / currentSession.totalDuration) * 100))
     : 0;
 
   // Determine session type label
@@ -198,9 +205,9 @@ export default function TimerDisplay() {
 
   return (
     <div className="flex flex-col items-center justify-center">
-      <div className="relative w-80 h-80 mb-6">
+      <div className="relative w-80 h-80 mb-6 max-w-full">
         {/* Progress circle */}
-        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100">
+        <svg className="absolute inset-0 w-full h-full -rotate-90" viewBox="0 0 100 100" aria-hidden="true">
           <circle
             key={timerKey}
             cx="50"
@@ -214,14 +221,16 @@ export default function TimerDisplay() {
             strokeDashoffset={283 - (283 * progress) / 100}
             strokeLinecap="round"
           >
-            <animate
-              attributeName="stroke-dashoffset"
-              from={283 - (283 * (progress - (100 / currentSession.totalDuration))) / 100}
-              to={283 - (283 * progress) / 100}
-              dur="1s"
-              begin="0s"
-              fill="freeze"
-            />
+            {currentSession.totalDuration > 0 && (
+              <animate
+                attributeName="stroke-dashoffset"
+                from={283 - (283 * Math.max(0, (progress - (100 / Math.max(1, currentSession.totalDuration)))) / 100)}
+                to={283 - (283 * progress) / 100}
+                dur="1s"
+                begin="0s"
+                fill="freeze"
+              />
+            )}
           </circle>
         </svg>
         
@@ -240,7 +249,7 @@ export default function TimerDisplay() {
             </motion.span>
           </AnimatePresence>
           
-          <span className="text-sm text-text-muted mt-2 capitalize">
+          <span className="text-sm text-text-muted mt-2 capitalize" aria-live="polite">
             {timerState === 'idle' ? 'Ready' : timerState === 'paused' ? 'Paused' : sessionTypeLabel}
           </span>
           
@@ -260,7 +269,7 @@ export default function TimerDisplay() {
       </div>
       
       {/* Timer controls */}
-      <div className="flex items-center space-x-5">
+      <div className="flex items-center space-x-5" role="group" aria-label="Timer controls">
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={handleStop}
@@ -268,7 +277,7 @@ export default function TimerDisplay() {
             timerState === 'idle'
               ? 'text-text-muted/50 cursor-not-allowed'
               : 'text-text-muted hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400'
-          } focus:outline-none`}
+          } focus:outline-none focus:ring-2 focus:ring-primary-500/40`}
           aria-label="Stop timer"
           disabled={timerState === 'idle'}
         >
@@ -278,7 +287,7 @@ export default function TimerDisplay() {
         <motion.button
           whileTap={{ scale: 0.9 }}
           onClick={handlePlayPause}
-          className={`w-16 h-16 flex items-center justify-center rounded-full focus:outline-none ${
+          className={`w-16 h-16 flex items-center justify-center rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500/60 ${
             timerState === 'running'
               ? 'bg-primary-500 text-white hover:bg-primary-600'
               : 'bg-primary-600 text-white hover:bg-primary-700'
@@ -299,7 +308,7 @@ export default function TimerDisplay() {
             timerState === 'idle'
               ? 'text-text-muted/50 cursor-not-allowed'
               : 'text-text-muted hover:text-primary-500 dark:text-gray-400 dark:hover:text-primary-400'
-          } focus:outline-none`}
+          } focus:outline-none focus:ring-2 focus:ring-primary-500/40`}
           aria-label="Skip to next session"
           disabled={timerState === 'idle'}
         >
@@ -309,7 +318,7 @@ export default function TimerDisplay() {
       
       {/* Session counter */}
       {currentSession.sessionsCompleted > 0 && (
-        <div className="mt-6 text-sm text-text-muted">
+        <div className="mt-6 text-sm text-text-muted" aria-live="polite">
           Sessions completed: <span className="font-medium">{currentSession.sessionsCompleted}</span>
         </div>
       )}
