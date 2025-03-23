@@ -34,7 +34,7 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
   const { getActiveHabitProgress } = useTimerStore();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showActionMenu, setShowActionMenu] = useState(false);
-  const [lastUpdateTime, setLastUpdateTime] = useState<number>(Date.now());
+  const [lastUpdateTime, setLastUpdateTime] = useState(Date.now());
   
   // Set client-side rendering flag
   useEffect(() => {
@@ -43,12 +43,10 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
   
   // Check if the habit is completed for today
   const today = isClient ? format(new Date(), 'yyyy-MM-dd') : '';
-  let completedToday = isClient && habit.completions.some(c => c.date.startsWith(today));
   
-  // Get completion count for today
-  const completionCount = isClient 
-    ? habit.completions.filter(c => c.date.startsWith(today)).length
-    : 0;
+  // Initialize completion status
+  let completedToday = isClient && habit.completions.some(c => c.date.split('T')[0] === today);
+  let completionCount = isClient ? habit.completions.filter(c => c.date.split('T')[0] === today).reduce((sum, c) => sum + c.count, 0) : 0;
   
   // Get target repetitions
   const repetitionTarget = habit.frequency.repetitions || 1;
@@ -56,38 +54,16 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
   // Calculate progress
   const progress = (completionCount / repetitionTarget) * 100;
   
-  // Calculate study/work progress if this is a study/work habit with duration
+  // Calculate study progress for study/work habits with duration
   let studyProgress = null;
   if (isClient && (habit.category === 'study' || habit.category === 'work') && habit.duration) {
-    // Get hours spent and calculate progress percentage
-    let hoursSpent = 0;
-    
-    // Go through each completion
-    habit.completions.forEach(completion => {
-      if (completion.notes && completion.notes.includes('hours of study with timer')) {
-        // This is a timer-tracked completion - extract hours from the notes
-        const hoursMatch = completion.notes.match(/Completed (\d+(\.\d+)?) hours/);
-        if (hoursMatch && hoursMatch[1]) {
-          hoursSpent += parseFloat(hoursMatch[1]);
-        } else {
-          // Fallback to the count if we can't parse the notes
-          hoursSpent += completion.count || 0;
-        }
-      } else {
-        // This is a manually tracked completion
-        hoursSpent += completion.count || 0;
-      }
-    });
-    
-    const totalHours = habit.duration;
-    const percentComplete = Math.min(100, Math.max(0, (hoursSpent / totalHours) * 100));
-    
-    // Only consider the habit completed if it reaches 100%
+    const todayCompletions = habit.completions.filter(c => c.date.split('T')[0] === today);
+    const hoursSpent = todayCompletions.reduce((sum, c) => sum + c.count, 0);
+    const percentComplete = habit.duration ? Math.min(100, (hoursSpent / habit.duration) * 100) : 0;
     const isCompleted = percentComplete >= 100;
     
     studyProgress = {
       hoursSpent,
-      totalHours,
       percentComplete,
       isCompleted
     };
@@ -313,7 +289,7 @@ export default function HabitCard({ habit, onClick, onEdit }: HabitCardProps) {
             <div className="mt-2">
               <div className="flex justify-between text-xs text-white/70 mb-1">
                 <span>{studyProgress.hoursSpent.toFixed(1)} hours</span>
-                <span>{(studyProgress.totalHours - studyProgress.hoursSpent).toFixed(1)} remaining</span>
+                <span>{((habit.duration || 0) - studyProgress.hoursSpent).toFixed(1)} remaining</span>
               </div>
               <div className="bg-black/30 rounded-full h-2 overflow-hidden">
                 <div 

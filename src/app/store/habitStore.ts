@@ -39,9 +39,6 @@ export const useHabitStore = create<HabitState>()(
           completions: [],
         };
         
-        // Remove automatic completion for daily habits
-        // Now habits will only be completed when the user explicitly checks them
-        
         set((state) => ({ habits: [...state.habits, newHabit] }));
       },
       updateHabit: (id, updates) => {
@@ -68,9 +65,13 @@ export const useHabitStore = create<HabitState>()(
           
           const habit = state.habits[habitIndex];
           
-          // Check if there's already a completion for today
+          // Use completion's date if provided, otherwise use today
+          const completionDate = completion.date ? 
+            completion.date.split('T')[0] : today;
+          
+          // Check if there's already a completion for the specified date
           const existingCompletionIndex = habit.completions.findIndex(c => 
-            c.date.startsWith(today)
+            c.date.startsWith(completionDate)
           );
           
           let updatedCompletions;
@@ -97,11 +98,14 @@ export const useHabitStore = create<HabitState>()(
               };
             }
           } else {
-            // Add new completion
+            // Add new completion with the proper date
+            const completionDateTime = completion.date || 
+              completionDate + 'T' + new Date().toISOString().split('T')[1];
+              
             updatedCompletions = [
               ...habit.completions, 
               { 
-                date: completion.date || today + 'T' + new Date().toISOString().split('T')[1],
+                date: completionDateTime,
                 count: completion.count || 1,
                 notes: completion.notes,
                 habitId: habit.id
@@ -113,7 +117,7 @@ export const useHabitStore = create<HabitState>()(
           let currentStreak = habit.streak.current;
           
           // Check if the completion is for today
-          if (completion.date?.startsWith(today) || !completion.date) {
+          if (completionDate === today) {
             // Check if there was a completion yesterday
             const yesterday = format(new Date(new Date().setDate(new Date().getDate() - 1)), 'yyyy-MM-dd');
             const hadCompletionYesterday = habit.completions.some(c => c.date.startsWith(yesterday));

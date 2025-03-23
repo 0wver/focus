@@ -69,7 +69,7 @@ export default function HabitCalendar({ isOpen, onClose, onSelectDate }: HabitCa
         return habit.frequency.days?.includes(dayOfWeek) || false;
       }
       
-      // For daily habits, show them for today regardless of completion status
+      // For daily habits, we need special handling
       if (habit.frequency.type === 'daily') {
         // Always show daily habits for today
         if (isSelectedDateToday) {
